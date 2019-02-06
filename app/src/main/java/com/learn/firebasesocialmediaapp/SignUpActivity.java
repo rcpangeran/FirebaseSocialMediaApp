@@ -1,6 +1,7 @@
 package com.learn.firebasesocialmediaapp;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,6 +17,8 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class SignUpActivity extends AppCompatActivity implements View.OnClickListener {
     private LinearLayout lyoSignUp_Root;
@@ -55,8 +58,14 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            // Transition to next acitivity
+            // Transition to next activity
+            transitiontoSocialMeiaActivity();
         }
+    }
+
+    private void transitiontoSocialMeiaActivity() {
+        Intent intent = new Intent(this, SocialMediaActivity.class);
+        startActivity(intent);
     }
 
     private void callAllOnClickEvent() {
@@ -107,6 +116,27 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                                         "Signing up SUCCESSFUL",
                                         Toast.LENGTH_SHORT)
                                         .show();
+
+                                FirebaseDatabase.getInstance().getReference().child("my_users")
+                                        .child(task.getResult().getUser().getUid()).child("username")
+                                        .setValue(edtSignUp_Username.getText().toString());
+
+
+                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                        .setDisplayName(edtSignUp_Username.getText().toString())
+                                        .build();
+
+                                FirebaseAuth.getInstance().getCurrentUser().updateProfile(profileUpdates)
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    Toast.makeText(SignUpActivity.this, "Display name updated", Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                        });
+
+                                transitiontoSocialMeiaActivity();
                             } else {
                                 Toast.makeText(SignUpActivity.this,
                                         "Signing up failed",
@@ -147,6 +177,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                                         "Signing in SUCCESSFUL",
                                         Toast.LENGTH_SHORT)
                                         .show();
+                                transitiontoSocialMeiaActivity();
                             } else {
                                 Toast.makeText(SignUpActivity.this,
                                         "Signing in failed",
